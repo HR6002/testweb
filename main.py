@@ -27,7 +27,6 @@ def read_root():
         <script>
             let socket;
 
-            // Connect WebSocket and handle open, message, and close events
             function connectWebSocket() {
                 let username = document.getElementById("username").value;
                 let protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
@@ -54,7 +53,6 @@ def read_root():
                 };
             }
 
-            // Send message to WebSocket
             function sendMessage() {
                 let recipient = document.getElementById("recipient").value;
                 let message = document.getElementById("message").value;
@@ -68,7 +66,6 @@ def read_root():
                 }
             }
 
-            // Display received or sent message in the chat window
             function displayMessage(msg) {
                 let chat = document.getElementById("chat");
                 let messageElement = document.createElement("p");
@@ -96,7 +93,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
             if recipient in connections:
                 await connections[recipient].send_text(f"{username}: {message}")
             
-            # Send message back to the sender only if it's not the sender's own username
+            # Do not send the message back to the sender if the recipient is the same
             if recipient != username:
                 await websocket.send_text(f"You: {message}")
     except Exception as e:
