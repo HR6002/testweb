@@ -26,31 +26,49 @@ def read_root():
 
         <script>
             let socket;
+
+            // Connect WebSocket and handle open, message, and close events
             function connectWebSocket() {
                 let username = document.getElementById("username").value;
-                // Check the current protocol of the page (either http or https)
                 let protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
                 socket = new WebSocket(`${protocol}${window.location.host}/ws/${username}`);
                 
                 socket.onopen = () => {
                     document.getElementById("response").innerText = `Connected as ${username}`;
+                    console.log(`WebSocket opened as ${username}`);
                 };
+
                 socket.onmessage = (event) => {
-                    displayMessage(event.data);
+                    if (event.data) {
+                        displayMessage(event.data);
+                    }
                 };
-                socket.onclose = () => {
+
+                socket.onclose = (event) => {
                     document.getElementById("response").innerText = "Disconnected";
+                    console.log("WebSocket closed", event);
+                };
+
+                socket.onerror = (event) => {
+                    console.error("WebSocket error:", event);
                 };
             }
+
+            // Send message to WebSocket
             function sendMessage() {
                 let recipient = document.getElementById("recipient").value;
                 let message = document.getElementById("message").value;
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     let data = JSON.stringify({recipient, message});
                     socket.send(data);
+                    console.log(`Sending message: ${data}`);
                     displayMessage(`You: ${message}`);
+                } else {
+                    console.log("WebSocket not open");
                 }
             }
+
+            // Display received or sent message in the chat window
             function displayMessage(msg) {
                 let chat = document.getElementById("chat");
                 let messageElement = document.createElement("p");
@@ -68,8 +86,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
     connections[username] = websocket
     try:
         while True:
-            data = await websocket.receive_text()
-            data = json.loads(data)
+            data = await websocket.receive_text()  # Receive message from client
+            data = json.loads(data)  # Deserialize incoming JSON
             recipient = data.get("recipient")
             message = data.get("message")
             print(f"{username} to {recipient}: {message}")
@@ -80,10 +98,13 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
             
             # Also send message back to the sender
             await websocket.send_text(f"You: {message}")
-    except:
-        pass
+    except Exception as e:
+        print(f"Error: {e}")
     finally:
+        # Clean up and remove the user from connections on disconnect
         del connections[username]
+        print(f"{username} disconnected")
 
-
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
