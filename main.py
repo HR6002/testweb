@@ -104,3 +104,4 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
         # Clean up and remove the user from connections on disconnect
         del connections[username]
         print(f"{username} disconnected")
+
