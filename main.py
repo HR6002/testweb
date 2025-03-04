@@ -28,7 +28,10 @@ def read_root():
             let socket;
             function connectWebSocket() {
                 let username = document.getElementById("username").value;
-                socket = new WebSocket(`ws://${window.location.host}/ws/${username}`);
+                // Check the current protocol of the page (either http or https)
+                let protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                socket = new WebSocket(`${protocol}${window.location.host}/ws/${username}`);
+                
                 socket.onopen = () => {
                     document.getElementById("response").innerText = `Connected as ${username}`;
                 };
@@ -81,5 +84,6 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
         pass
     finally:
         del connections[username]
+
 
 
