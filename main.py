@@ -96,13 +96,12 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
             if recipient in connections:
                 await connections[recipient].send_text(f"{username}: {message}")
             
-            # Also send message back to the sender
-            await websocket.send_text(f"You: {message}")
+            # Send message back to the sender only if it's not the sender's own username
+            if recipient != username:
+                await websocket.send_text(f"You: {message}")
     except Exception as e:
         print(f"Error: {e}")
     finally:
         # Clean up and remove the user from connections on disconnect
         del connections[username]
         print(f"{username} disconnected")
-
-
